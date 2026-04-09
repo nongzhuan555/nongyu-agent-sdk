@@ -24,14 +24,15 @@ export class ContextManager {
    * 获取当前所有上下文消息
    */
   getMessages(): Message[] {
+    // 这是浅拷贝，暂时先这样写，后面调试过程中再找问题
     return [...this.messages]
   }
 
   /**
-   * 清除上下文
+   * 清空上下文
    */
   clear() {
-    this.messages = []
+    this.messages.length = 0
   }
 
   /**
@@ -54,6 +55,8 @@ export class ContextManager {
 
   /**
    * 压缩上下文（待实现）
+   * 需要依赖模型来进行语义压缩
+   * 会额外产生一次模型调用
    */
   compress() {
     // 根据 Tech.md，未来可引入上下文压缩算法

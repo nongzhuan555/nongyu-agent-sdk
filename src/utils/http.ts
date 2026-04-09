@@ -48,16 +48,27 @@ export class HttpClient {
 
   /**
    * 发送 GET 请求
+   * @param url 请求地址
+   * @param config 请求配置
+   * @param stream 是否启用流式响应
    */
-  public get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    return this.instance.get(url, config).then((res) => res.data)
+  public get<T = any>(url: string, config?: AxiosRequestConfig, stream: boolean = false): Promise<T | AxiosResponse> {
+    const requestConfig = stream ? { ...config, responseType: 'stream' } : config
+    const request = this.instance.get(url, requestConfig)
+    return stream ? request : request.then((res) => res.data)
   }
 
   /**
    * 发送 POST 请求
+   * @param url 请求地址
+   * @param data 请求数据
+   * @param config 请求配置
+   * @param stream 是否启用流式响应
    */
-  public post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    return this.instance.post(url, data, config).then((res) => res.data)
+  public post<T = any>(url: string, data?: any, config?: AxiosRequestConfig, stream: boolean = false): Promise<T | AxiosResponse> {
+    const requestConfig = stream ? { ...config, responseType: 'stream' } : config
+    const request = this.instance.post(url, data, requestConfig)
+    return stream ? request : request.then((res) => res.data)
   }
 
   /**
