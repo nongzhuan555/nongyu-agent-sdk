@@ -59,10 +59,3 @@ temp/
 .stylelintcache
 .prettiercache
 
-# 包管理器锁定文件（如果需要忽略，请取消注释）
-# package-lock.json
-# yarn.lock
-# pnpm-lock.yaml
-
-# 文档
-docs/
