@@ -55,15 +55,20 @@ export class LLMClient {
         },
       )
 
-      // 在浏览器环境下，response.data 是 ReadableStream
-      // 在 Node.js 环境下，response.data 是 IncomingMessage
-      // 这里暂时按 Node.js 风格处理，后续可根据需求适配浏览器
+      // 维护一个缓冲区来处理流式数据，防止 JSON 解析错误
+      let buffer = ''
       response.data.on('data', (chunk: Buffer) => {
-        const lines = chunk.toString().split('\n')
+        buffer += chunk.toString()
+        const lines = buffer.split('\n')
+        
+        // 最后一行可能是不完整的，保留在缓冲区中
+        buffer = lines.pop() || ''
+
         for (const line of lines) {
-          if (line.trim() === '') continue
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6)
+          const trimmedLine = line.trim()
+          if (trimmedLine === '') continue
+          if (trimmedLine.startsWith('data: ')) {
+            const data = trimmedLine.slice(6)
             if (data === '[DONE]') break
             try {
               const parsed = JSON.parse(data)
@@ -72,7 +77,8 @@ export class LLMClient {
                 onToken(token)
               }
             } catch (e) {
-              console.error('Error parsing stream data:', e)
+              // 这里的解析错误通常是因为数据还不完整，但在有了 buffer 逻辑后应该很少发生
+              console.error('Error parsing stream data:', e, 'Line content:', trimmedLine)
             }
           }
         }

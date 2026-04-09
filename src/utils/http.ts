@@ -52,10 +52,24 @@ export class HttpClient {
    * @param config 请求配置
    * @param stream 是否启用流式响应
    */
-  public get<T = any>(url: string, config?: AxiosRequestConfig, stream: boolean = false): Promise<T | AxiosResponse> {
-    const requestConfig = stream ? { ...config, responseType: 'stream' } : config
+  public get<T = any>(
+    url: string,
+    config?: AxiosRequestConfig,
+    stream: boolean = false,
+  ): Promise<T | AxiosResponse> {
+    const requestConfig: AxiosRequestConfig = stream ? { ...config, responseType: 'stream' } : { ...config }
     const request = this.instance.get(url, requestConfig)
-    return stream ? request : request.then((res) => res.data)
+    
+    if (stream) {
+      return request as any
+    }
+    
+    // 如果设置了特定的 responseType，则由调用方处理完整响应
+    if (requestConfig.responseType && requestConfig.responseType !== 'json') {
+      return request
+    }
+    
+    return request.then((res) => res.data)
   }
 
   /**
@@ -65,10 +79,25 @@ export class HttpClient {
    * @param config 请求配置
    * @param stream 是否启用流式响应
    */
-  public post<T = any>(url: string, data?: any, config?: AxiosRequestConfig, stream: boolean = false): Promise<T | AxiosResponse> {
-    const requestConfig = stream ? { ...config, responseType: 'stream' } : config
+  public post<T = any>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig,
+    stream: boolean = false,
+  ): Promise<T | AxiosResponse> {
+    const requestConfig: AxiosRequestConfig = stream ? { ...config, responseType: 'stream' } : { ...config }
     const request = this.instance.post(url, data, requestConfig)
-    return stream ? request : request.then((res) => res.data)
+    
+    if (stream) {
+      return request as any
+    }
+    
+    // 如果设置了特定的 responseType，则由调用方处理完整响应
+    if (requestConfig.responseType && requestConfig.responseType !== 'json') {
+      return request
+    }
+    
+    return request.then((res) => res.data)
   }
 
   /**

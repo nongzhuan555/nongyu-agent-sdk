@@ -1,7 +1,9 @@
 import { LLMClient } from './LLMClient'
 import { ContextManager } from './ContextManager'
-import systemPrompt from '../prompts/systemPrompt'
-import { BASE_URL, API_KEY } from 'config/LLMConfig'
+import { ToolManager } from './ToolManager'
+import { initTools } from './ToolManager'
+import composeSystemPrompt from '../prompts/systemPrompt'
+import { BASE_URL, API_KEY } from '../../config/LLMConfig'
 import eventSystem from './EventSystem'
 
 /**
@@ -10,6 +12,7 @@ import eventSystem from './EventSystem'
 export class Agent {
   private llmClient: LLMClient
   private contextManager: ContextManager
+  private toolManager: ToolManager
   private maxRetries: number = 15 // 最大 ReAct 循环次数
   private baseURL: string = BASE_URL // 默认基础 URL，后续可根据需要修改
   private apiKey: string = API_KEY // 默认 API Key，后续可根据需要修改
@@ -21,8 +24,11 @@ export class Agent {
   constructor(options?: { baseURL?: string; apiKey?: string; maxTokens?: number }) {
     this.llmClient = new LLMClient(options?.baseURL || this.baseURL, options?.apiKey || this.apiKey)
     this.contextManager = new ContextManager(options?.maxTokens)
+    this.toolManager = new ToolManager()
+    initTools(this.toolManager) // 初始化工具
 
-    // 初始化上下文，加入系统提示词
+    // 初始化上下文，加入系统提示词，系统提示词中加入工具列表
+    const systemPrompt = composeSystemPrompt(this.toolManager.getTools())
     this.contextManager.addMessage({
       role: 'system',
       content: systemPrompt,
@@ -92,14 +98,23 @@ export class Agent {
           // 触发工具调用开始事件
           eventSystem.emit('chat:tool:start', { actionMatch: actionMatch[1] })
           
-          // const action = JSON.parse(actionMatch[1])
-          // TODO: 根据行动指令调用具体工具并获取观测结果
-          const observation = '这是工具返回的模拟观测结果'
+          const action = JSON.parse(actionMatch[1])
+          const toolName = action.name
+          const toolArgs = action.arguments
+
+          const tool = this.toolManager.getTool(toolName)
+          let observation: any
+
+          if (tool) {
+            observation = await tool.function(toolArgs)
+          } else {
+            observation = `未找到名为 ${toolName} 的工具`
+          }
 
           this.contextManager.addMessage({
             role: 'tool',
-            content: observation,
-            tool_call_id: 'temp_id', // 示例 ID
+            content: typeof observation === 'string' ? observation : JSON.stringify(observation),
+            tool_call_id: action.id || 'temp_id',
           } as any)
 
           // 触发工具调用完成事件
@@ -128,6 +143,7 @@ export class Agent {
    */
   clearContext() {
     this.contextManager.clear()
+    const systemPrompt = composeSystemPrompt(this.toolManager.getTools())
     this.contextManager.addMessage({
       role: 'system',
       content: systemPrompt,

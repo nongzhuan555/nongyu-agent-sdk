@@ -32,6 +32,11 @@ const composeSystemPrompt = (tools:Tool[]=[]) => {
         ${JSON.stringify(tools)}
 
         ### 工具调用规范
+
+        ### 回复格式
+        基本要求：回复必须恰好是一个可以被JSON.stringify解析的JSON格式文本，一定不能让解析报错
+        - 
+
 `
     return systemPrompt
 }

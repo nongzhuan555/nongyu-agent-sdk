@@ -1,0 +1,10 @@
+# 强制将所有文本文件的换行符统一为 LF
+* text=auto eol=lf
+
+# 确保特定二进制文件不被 Git 修改换行符
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
