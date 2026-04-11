@@ -1,5 +1,5 @@
-import { Tool } from '../../types/Tool'
-import http from '../../utils/http'
+import { Tool } from '../../types/Tool.js'
+import http from '../../utils/http.js'
 import * as iconv from 'iconv-lite'
 import { AxiosResponse } from 'axios'
 
@@ -10,7 +10,7 @@ import { AxiosResponse } from 'axios'
 export const WebFetcher: Tool = {
   name: 'web_fetcher',
   description: '获取指定 URL 的网页 HTML 内容，自动处理编码转换（如 GB2312）。',
-  param: {
+  params: {
     name: 'url',
     type: 'string',
     description: '要获取的网页 URL',

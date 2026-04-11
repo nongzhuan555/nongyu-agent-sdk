@@ -1,21 +1,22 @@
-import mitt, { Emitter, EventType } from 'mitt'
+import * as mittModule from 'mitt'
+import type { Emitter, EventType } from 'mitt'
 
 /**
  * 事件系统类，基于 mitt 封装
  * 提供事件的订阅、发布和取消订阅功能
  */
 export class EventSystem {
-  private emitter: Emitter
+  private emitter: Emitter<Record<EventType, any>>
 
   constructor() {
-    if (!this.emitter) {
-      this.emitter = mitt()
-    }
+    // 兼容 ESM 和 CJS 的 mitt 导出方式，解决 DTS 构建时的类型报错
+    const mitt = (mittModule as any).default || (mittModule as any)
+    this.emitter = mitt()
   }
 
   /**
    * 订阅事件
-   * @param event 事件名称或事件名称数组
+   * @param event 事件名称
    * @param handler 事件处理函数
    */
   public on<T = any>(event: EventType, handler: (event: T) => void): void {
@@ -28,16 +29,16 @@ export class EventSystem {
    * @param handler 事件处理函数
    */
   public once<T = any>(event: EventType, handler: (event: T) => void): void {
-    const onceHandler = (event: T) => {
-      handler(event)
-      this.off(event, onceHandler)
+    const onceHandler = (data: T) => {
+      handler(data)
+      this.emitter.off(event, onceHandler)
     }
     this.emitter.on(event, onceHandler)
   }
 
   /**
    * 取消订阅事件
-   * @param event 事件名称或事件名称数组
+   * @param event 事件名称
    * @param handler 事件处理函数
    */
   public off<T = any>(event: EventType, handler: (event: T) => void): void {

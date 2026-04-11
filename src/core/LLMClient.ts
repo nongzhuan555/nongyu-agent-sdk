@@ -1,20 +1,42 @@
-import { HttpClient } from '../utils/http'
-import { Message } from '../types/Message'
-import { BASE_URL, API_KEY } from '../../config/LLMConfig'
+import { HttpClient } from '../utils/http.js'
+import { Message } from '../types/Message.js'
+import { BASE_URL, API_KEY, MODEL, ENDPOINT } from '../../config/LLMConfig.js'
 
 /**
  * LLM 客户端类，用于与大模型 API 进行交互
  */
 export class LLMClient {
   private httpClient: HttpClient
+  private mode: 'dev' | 'prod' = 'dev' // 运行模式
+  private model: string = MODEL // 使用的模型
 
-  constructor(baseURL: string = BASE_URL, apiKey: string = API_KEY) {
+  constructor(options: { 
+    baseURL?: string; 
+    apiKey?: string; 
+    mode?: 'dev' | 'prod';
+    model?: string;
+  }) {
+    this.mode = options.mode || 'dev'
+    this.model = options.model || MODEL
     this.httpClient = new HttpClient({
-      baseURL,
+      baseURL: options.baseURL || BASE_URL,
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${options.apiKey || API_KEY}`,
       },
+      mode: this.mode,
     })
+  }
+
+  // 内部日志方法，仅在 dev 模式下输出
+  private log(...args: any[]) {
+    if (this.mode === 'dev') {
+      console.log(...args)
+    }
+  }
+
+  // 内部错误日志方法，仅在 dev 模式下输出
+  private error(...args: any[]) {
+    this.log(...args)
   }
 
   /**
@@ -24,14 +46,14 @@ export class LLMClient {
    */
   async chat(messages: Message[]): Promise<string> {
     try {
-      const data = await this.httpClient.post<any>('/chat/completions', {
-        model: 'glm-4', // 默认使用 GLM-4
+      const data = await this.httpClient.post<any>(ENDPOINT, {
+        model: this.model, // 使用配置的模型
         messages,
       })
       return data.choices[0].message.content
-    } catch (error) {
-      console.error('LLM Chat Error:', error)
-      throw error
+    } catch (err) {
+      this.error('LLM Chat Error:', err)
+      throw err
     }
   }
 
@@ -40,13 +62,13 @@ export class LLMClient {
    * @param messages 消息列表
    * @param onToken 接收到 token 时的回调函数
    */
-  async chatStream(messages: Message[], onToken: (token: string) => void): Promise<void> {
+  async chatStream(messages: Message[], onToken: (token: string) => any): Promise<void> {
     try {
       const axiosInstance = this.httpClient.getInstance()
       const response = await axiosInstance.post(
-        '/chat/completions',
+        ENDPOINT,
         {
-          model: 'glm-4',
+          model: this.model, // 使用配置的模型
           messages,
           stream: true,
         },
@@ -74,11 +96,12 @@ export class LLMClient {
               const parsed = JSON.parse(data)
               const token = parsed.choices[0]?.delta?.content || ''
               if (token) {
+                // 调用回调函数处理 token
                 onToken(token)
               }
             } catch (e) {
               // 这里的解析错误通常是因为数据还不完整，但在有了 buffer 逻辑后应该很少发生
-              console.error('Error parsing stream data:', e, 'Line content:', trimmedLine)
+              this.error('Error parsing stream data:', e, 'Line content:', trimmedLine)
             }
           }
         }
@@ -88,9 +111,9 @@ export class LLMClient {
         response.data.on('end', () => resolve())
         response.data.on('error', (err: Error) => reject(err))
       })
-    } catch (error) {
-      console.error('LLM Stream Chat Error:', error)
-      throw error
+    } catch (err) {
+      this.error('LLM Stream Chat Error:', err)
+      throw err
     }
   }
 }

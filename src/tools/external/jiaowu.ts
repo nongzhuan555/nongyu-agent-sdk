@@ -1,6 +1,6 @@
 // 教务系统相关工具
 import { jiaowuNotice,jiaowuCompetition } from "nongyu-jiaowu";
-import { Tool } from "@/types/Tool";
+import { Tool } from "../../types/Tool.js";
 const jiaowuNoticeTool: Tool = {
     params: jiaowuNotice.registerInfo.params,
     description: jiaowuNotice.registerInfo.description,

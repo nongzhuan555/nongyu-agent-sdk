@@ -5,8 +5,10 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
  */
 export class HttpClient {
   private instance: AxiosInstance
+  private mode: 'dev' | 'prod' = 'dev' // 运行模式
 
-  constructor(config?: AxiosRequestConfig) {
+  constructor(config?: AxiosRequestConfig & { mode?: 'dev' | 'prod' }) {
+    this.mode = config?.mode || 'dev'
     this.instance = axios.create({
       timeout: 10000, // 默认超时时间 10 秒
       headers: {
@@ -34,12 +36,14 @@ export class HttpClient {
       },
       (error) => {
         // 统一错误处理
-        if (error.response) {
-          console.error(`HTTP Error: ${error.response.status} - ${error.response.statusText}`)
-        } else if (error.request) {
-          console.error('HTTP Error: No response received')
-        } else {
-          console.error('HTTP Error:', error.message)
+        if (this.mode === 'dev') {
+          if (error.response) {
+            console.error(`HTTP Error: ${error.response.status} - ${error.response.statusText}`)
+          } else if (error.request) {
+            console.error('HTTP Error: No response received')
+          } else {
+            console.error('HTTP Error:', error.message)
+          }
         }
         return Promise.reject(error)
       },

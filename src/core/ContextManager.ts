@@ -1,4 +1,4 @@
-import { Message } from '../types/Message'
+import { Message } from '../types/Message.js'
 
 /**
  * 上下文管理器，用于管理 Agent 的短期记忆
@@ -6,9 +6,18 @@ import { Message } from '../types/Message'
 export class ContextManager {
   private messages: Message[] = []
   private maxTokens: number = 4000 // 默认最大上下文限制
+  private mode: 'dev' | 'prod' = 'dev' // 运行模式
 
-  constructor(maxTokens: number = 4000) {
+  constructor(maxTokens: number = 4000, mode: 'dev' | 'prod' = 'dev') {
     this.maxTokens = maxTokens
+    this.mode = mode
+  }
+
+  // 内部日志方法，仅在 dev 模式下输出
+  private log(...args: any[]) {
+    if (this.mode === 'dev') {
+      console.log(...args)
+    }
   }
 
   /**
@@ -26,6 +35,18 @@ export class ContextManager {
   getMessages(): Message[] {
     // 这是浅拷贝，暂时先这样写，后面调试过程中再找问题
     return [...this.messages]
+  }
+
+  /**
+   * 初始化/重置上下文，并添加系统提示词
+   * @param systemPrompt 系统提示词内容
+   */
+  init(systemPrompt: string) {
+    this.clear()
+    this.addMessage({
+      role: 'system',
+      content: systemPrompt,
+    } as any)
   }
 
   /**
@@ -60,6 +81,6 @@ export class ContextManager {
    */
   compress() {
     // 根据 Tech.md，未来可引入上下文压缩算法
-    console.log('Context compression not implemented yet.')
+    this.log('Context compression not implemented yet.')
   }
 }

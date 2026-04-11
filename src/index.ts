@@ -1,12 +1,7 @@
 /**
  * 农屿 Agent SDK 入口文件
+ * 仅对外暴露核心 Agent 类及事件系统
  */
-export * from './core/Agent'
-export * from './core/LLMClient'
-export * from './core/ContextManager'
-export * from './core/ToolManager'
-export * from './types/Message'
-export * from './types/Tool'
-export * from './prompts/systemPrompt'
-export * from './utils/http'
+export { Agent } from './core/Agent.js'
+export { default as eventSystem } from './core/EventSystem.js'
 

@@ -2,14 +2,27 @@
   "name": "nongyu-agent-sdk",
   "version": "1.0.0",
   "description": "农屿系统内部专用的Agent SDK",
+  "type": "module",
   "main": "dist/index.js",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
+    "build": "tsup",
+    "dev": "tsup --watch",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint \"src/**/*.ts\"",
-    "test": "ts-node test.ts"
+    "test": "tsx test/test.ts"
   },
   "keywords": [
     "agent",
@@ -33,6 +46,8 @@
     "rimraf": "^5.0.0",
     "terser": "^5.24.0",
     "ts-node": "^10.9.1",
+    "tsup": "^8.0.0",
+    "tsx": "^4.0.0",
     "typescript": "^5.0.0"
   }
 }
