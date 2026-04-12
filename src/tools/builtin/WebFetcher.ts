@@ -1,6 +1,6 @@
 import { Tool } from '../../types/Tool.js'
 import http from '../../utils/http.js'
-import * as iconv from 'iconv-lite'
+import iconv from 'iconv-lite'
 import { AxiosResponse } from 'axios'
 
 /**
@@ -48,8 +48,8 @@ export const WebFetcher: Tool = {
         }
       }
 
-      // 如果是 gb2312 或 gbk，进行转换
-      if (encoding === 'gb2312' || encoding === 'gbk') {
+      // 如果检测到编码且 iconv-lite 支持，则使用检测到的编码进行转换
+      if (encoding && iconv.encodingExists(encoding)) {
         return iconv.decode(buffer, encoding)
       }
 
